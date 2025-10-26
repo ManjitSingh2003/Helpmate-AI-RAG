@@ -2,7 +2,7 @@
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import PyPDFLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -30,3 +30,4 @@ def get_retriever():
     # ✅ Return retriever for LangChain 0.2+ compatibility
     retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
     return retriever
+
