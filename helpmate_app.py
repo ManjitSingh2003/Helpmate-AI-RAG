@@ -84,7 +84,7 @@ if st.button("🔍 Get Answer") and query.strip():
                 st.write(answer)
 
                 # --- Retrieve supporting documents ---
-                docs = retriever.get_relevant_documents(query)
+                docs = retriever.invoke(query)
                 st.markdown("### 📄 Retrieved Sources")
                 for i, d in enumerate(docs[:k], start=1):
                     st.write(f"**Source {i}:**")
@@ -93,5 +93,6 @@ if st.button("🔍 Get Answer") and query.strip():
 
             except Exception as e:
                 st.error(f"⚠️ An error occurred: {str(e)}")
+
 
 
