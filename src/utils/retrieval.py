@@ -34,5 +34,11 @@ def get_vectorstore():
 
     return vectorstore
 
-
-
+def get_retriever(k=6):
+    """
+    Returns a retriever object from a cached vectorstore with
+    top-k similarity search.
+    """
+    vectorstore = get_vectorstore()
+    retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": k})
+    return retriever
