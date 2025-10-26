@@ -6,12 +6,13 @@ from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
-from src.utils.retrieval import get_retriever
-from src.prompts import custom_rag_prompt
 
 # --- Path Setup ---
 sys.path.append(os.path.dirname(__file__))
 sys.path.append(os.path.join(os.path.dirname(__file__), "utils"))
+
+from src.utils.retrieval import get_retriever
+from src.prompts import custom_rag_prompt
 
 # --- Load environment variables ---
 load_dotenv()
@@ -33,7 +34,7 @@ model_name = st.sidebar.text_input(
 
 # --- Initialize LLM ---
 @st.cache_resource
-def init_llm(model_name):
+def init_llm(model_name: str):
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         st.error("⚠️ GROQ_API_KEY not found. Please set it in your .env file.")
@@ -42,9 +43,10 @@ def init_llm(model_name):
 
 # --- Initialize retriever ---
 @st.cache_resource
-def init_retriever(k):
-    return get_retriever(k=k)
+def init_retriever(chunks: int):
+    return get_retriever(k=chunks)
 
+# Initialize
 llm = init_llm(model_name)
 retriever = init_retriever(k)
 
@@ -56,29 +58,31 @@ def format_docs(docs):
 query = st.text_input("💬 Ask your question:", "")
 
 if st.button("🔍 Get Answer") and query.strip():
-    with st.spinner("Generating answer..."):
-        try:
-            # --- Define RAG chain ---
-            rag_chain = (
-                {"context": retriever | format_docs, "question": RunnablePassthrough()}
-                | custom_rag_prompt
-                | llm
-                | StrOutputParser()
-            )
+    if not llm or not retriever:
+        st.error("LLM or Retriever not initialized. Check your .env file and API keys.")
+    else:
+        with st.spinner("Generating answer..."):
+            try:
+                # --- Define RAG chain ---
+                rag_chain = (
+                    {"context": retriever | format_docs, "question": RunnablePassthrough()}
+                    | custom_rag_prompt
+                    | llm
+                    | StrOutputParser()
+                )
 
-            # --- Generate answer ---
-            answer = rag_chain.invoke(query)
-            st.markdown("### ✅ Answer")
-            st.write(answer)
+                # --- Generate answer ---
+                answer = rag_chain.invoke(query)
+                st.markdown("### ✅ Answer")
+                st.write(answer)
 
-            # --- Retrieve supporting documents ---
-            docs = retriever.invoke(query)  # ✅ Replaced get_relevant_documents()
-            st.markdown("### 📄 Retrieved Sources")
-            for i, d in enumerate(docs[:k], start=1):
-                st.write(f"**Source {i}:**")
-                st.caption(d.metadata.get("source", "Unknown Document"))
-                st.write(d.page_content[:600] + ("..." if len(d.page_content) > 600 else ""))
+                # --- Retrieve supporting documents ---
+                docs = retriever.invoke(query)
+                st.markdown("### 📄 Retrieved Sources")
+                for i, d in enumerate(docs[:k], start=1):
+                    st.write(f"**Source {i}:**")
+                    st.caption(d.metadata.get("source", "Unknown Document"))
+                    st.write(d.page_content[:600] + ("..." if len(d.page_content) > 600 else ""))
 
-        except Exception as e:
-            st.error(f"⚠️ An error occurred: {str(e)}")
-
+            except Exception as e:
+                st.error(f"⚠️ An error occurred: {str(e)}")
