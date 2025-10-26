@@ -41,8 +41,12 @@ def init_llm(model_name):
     return ChatGroq(model=model_name, groq_api_key=api_key)
 
 # --- Initialize retriever ---
-def init_retriever(k):
-    return get_retriever(k=k)
+@st.cache_resource
+def init_retriever():
+    return get_retriever(k=6)  # default chunk
+
+retriever = init_retriever()
+retriever.search_kwargs['k'] = k
 
 llm = init_llm(model_name)
 retriever = init_retriever(k)
@@ -80,4 +84,5 @@ if st.button("🔍 Get Answer") and query.strip():
 
         except Exception as e:
             st.error(f"⚠️ An error occurred: {str(e)}")
+
 
