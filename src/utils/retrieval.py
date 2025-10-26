@@ -27,7 +27,10 @@ def get_retriever(k=6):
     splits = text_splitter.split_documents(documents)
 
     # Embed using SBERT model
-    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
+    embeddings = HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-mpnet-base-v2",
+        model_kwargs={"device": "cpu"}
+    )
 
     # Create FAISS vector database
     vectorstore = FAISS.from_documents(splits, embeddings)
@@ -35,3 +38,4 @@ def get_retriever(k=6):
     # ✅ Return retriever with dynamic k
     retriever = vectorstore.as_retriever(search_kwargs={"k": k})
     return retriever
+
