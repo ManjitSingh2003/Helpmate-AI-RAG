@@ -1,5 +1,11 @@
 # src/helpmate_app.py
+import sys
 import os
+
+# Add the src folder to Python path
+sys.path.append(os.path.dirname(__file__))
+sys.path.append(os.path.join(os.path.dirname(__file__), "utils"))
+
 from dotenv import load_dotenv 
 load_dotenv()
 
@@ -59,3 +65,4 @@ if st.button("🔍 Get Answer") and query.strip():
             st.write(f"**Source {i}:**")
             st.caption(d.metadata.get('source', 'Unknown Document'))
             st.write(d.page_content[:600] + ("..." if len(d.page_content) > 600 else ""))
+
