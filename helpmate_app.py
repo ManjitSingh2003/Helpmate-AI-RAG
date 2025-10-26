@@ -53,9 +53,6 @@ def init_retriever(k: int):
     retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": k})
     return retriever
 
-# --- Usage ---
-retriever = init_retriever(k)
-
 # Initialize
 llm = init_llm(model_name)
 retriever = init_retriever(k)
@@ -87,7 +84,7 @@ if st.button("🔍 Get Answer") and query.strip():
                 st.write(answer)
 
                 # --- Retrieve supporting documents ---
-                docs = retriever.invoke(query)
+                docs = retriever.get_relevant_documents(query)
                 st.markdown("### 📄 Retrieved Sources")
                 for i, d in enumerate(docs[:k], start=1):
                     st.write(f"**Source {i}:**")
@@ -96,4 +93,5 @@ if st.button("🔍 Get Answer") and query.strip():
 
             except Exception as e:
                 st.error(f"⚠️ An error occurred: {str(e)}")
+
 
