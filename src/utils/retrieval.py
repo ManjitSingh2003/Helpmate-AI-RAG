@@ -1,30 +1,45 @@
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.vectorstores import FAISS
-from langchain_community.document_loaders import PyPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+# src/utils/retrieval.py
 import os
+from langchain_community.document_loaders import DirectoryLoader, PyPDFLoader
+from langchain_community.vectorstores import Chroma
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-def get_retriever():
-    # Load all policy PDFs from the folder
-    docs_path = os.getenv("POLICY_DOCS_PATH", "./Policy-Documents")
+def get_vectorstore():
+    """
+    Loads PDF documents, splits them into chunks, creates embeddings,
+    and returns a Chroma vectorstore.
+    This function can be cached safely.
+    """
+    docs_path = os.getenv("DOCUMENT_PATH", "/content/drive/MyDrive/Policy-Documents")
+    
+    # Load PDFs from the directory
+    loader = DirectoryLoader(docs_path, glob="**/*.pdf", loader_cls=PyPDFLoader)
+    documents = loader.load()
+    if not documents:
+        raise ValueError(f"No documents found in {docs_path}")
 
-    documents = []
-    for file in os.listdir(docs_path):
-        if file.endswith(".pdf"):
-            loader = PyPDFLoader(os.path.join(docs_path, file))
-            documents.extend(loader.load())
+    # Split documents into smaller chunks
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=1000,
+        chunk_overlap=200,
+        add_start_index=True
+    )
+    all_splits = text_splitter.split_documents(documents)
 
-    # Split into chunks
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    splits = text_splitter.split_documents(documents)
+    # Create embeddings
+    embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
 
-    # Embed using SBERT model
-    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
+    # Initialize Chroma vectorstore
+    vectorstore = Chroma.from_documents(documents=all_splits, embedding=embedding_model)
 
-    # Create FAISS vector database
-    vectorstore = FAISS.from_documents(splits, embeddings)
+    return vectorstore
 
-    # ✅ Return retriever for LangChain 0.2+ compatibility
-    retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
+def get_retriever(k=6):
+    """
+    Returns a retriever object from a cached vectorstore with
+    top-k similarity search.
+    """
+    vectorstore = get_vectorstore()
+    retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": k})
     return retriever
-
