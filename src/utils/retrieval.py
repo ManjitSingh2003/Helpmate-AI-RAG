@@ -1,45 +1,35 @@
 # src/utils/retrieval.py
 import os
-from langchain_community.document_loaders import DirectoryLoader, PyPDFLoader
-from langchain_community.vectorstores import Chroma
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_community.document_loaders import DirectoryLoader
+from langchain.document_loaders import PyPDFLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.embeddings import HuggingFaceEmbeddings
+from langchain_chroma import Chroma
 
 def get_vectorstore():
     """
-    Loads PDF documents, splits them into chunks, creates embeddings,
-    and returns a Chroma vectorstore.
-    This function can be cached safely.
+    Loads PDF documents from the policy-documents folder in repo root,
+    splits them into chunks, creates embeddings, and returns a Chroma vectorstore.
     """
-    docs_path = os.getenv("DOCUMENT_PATH", "/content/drive/MyDrive/Policy-Documents")
-    
-    # Load PDFs from the directory
+    # 'utils' folder -> go up 2 levels to repo root
+    base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    docs_path = os.path.join(base_path, "Policy-Documents")  # folder in repo root
+
+    if not os.path.exists(docs_path):
+        raise FileNotFoundError(f"Directory not found: '{docs_path}'")
+
+    # Load PDFs
     loader = DirectoryLoader(docs_path, glob="**/*.pdf", loader_cls=PyPDFLoader)
     documents = loader.load()
     if not documents:
         raise ValueError(f"No documents found in {docs_path}")
 
-    # Split documents into smaller chunks
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000,
-        chunk_overlap=200,
-        add_start_index=True
-    )
-    all_splits = text_splitter.split_documents(documents)
+    # Split documents
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    splits = text_splitter.split_documents(documents)
 
     # Create embeddings
     embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
-
-    # Initialize Chroma vectorstore
-    vectorstore = Chroma.from_documents(documents=all_splits, embedding=embedding_model)
+    vectorstore = Chroma.from_documents(splits, embedding=embedding_model)
 
     return vectorstore
-
-def get_retriever(k=6):
-    """
-    Returns a retriever object from a cached vectorstore with
-    top-k similarity search.
-    """
-    vectorstore = get_vectorstore()
-    retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": k})
-    return retriever
