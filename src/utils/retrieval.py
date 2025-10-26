@@ -1,21 +1,32 @@
 # src/utils/retrieval.py
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores import FAISS
+from langchain_community.document_loaders import PyPDFLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 import os
 from dotenv import load_dotenv
 load_dotenv()
 
-from langchain_chroma import Chroma
-from langchain_community.embeddings import HuggingFaceEmbeddings
+def get_retriever():
+    # Load all policy PDFs from the folder
+    docs_path = os.getenv("POLICY_DOCS_PATH", "./Policy-Documents")
 
-PERSIST_DIR = os.environ.get("CHROMA_PERSIST_DIR", "./chroma_db")
-EMBED_MODEL = os.environ.get("EMBEDDING_MODEL", "sentence-transformers/all-mpnet-base-v2")
+    documents = []
+    for file in os.listdir(docs_path):
+        if file.endswith(".pdf"):
+            loader = PyPDFLoader(os.path.join(docs_path, file))
+            documents.extend(loader.load())
 
-def load_vectorstore():
-    embedding_model = HuggingFaceEmbeddings(model_name=EMBED_MODEL)
-    vect = Chroma(persist_directory=PERSIST_DIR, embedding_function=embedding_model)
-    return vect
+    # Split into chunks
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    splits = text_splitter.split_documents(documents)
 
-def get_retriever(k=6):
-    vect = load_vectorstore()
-    retriever = vect.as_retriever(search_type="similarity", search_kwargs={"k": k})
+    # Embed using SBERT model
+    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
+
+    # Create FAISS vector database
+    vectorstore = FAISS.from_documents(splits, embeddings)
+
+    # ✅ Return retriever for LangChain 0.2+ compatibility
+    retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
     return retriever
-
