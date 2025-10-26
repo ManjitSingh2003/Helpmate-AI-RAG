@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from langchain_community.document_loaders import PyPDFLoader
-from langchain.document_loaders import DirectoryLoader
+from langchain_community.document_loaders import DirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 from langchain.embeddings import HuggingFaceEmbeddings
@@ -43,3 +43,4 @@ if __name__ == "__main__":
     docs = load_documents(DOCS_PATH)
     splits = split_documents(docs)
     create_vectorstore(splits)
+
