@@ -5,9 +5,14 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
 
-def get_retriever():
+def get_retriever(k=6):
+    """
+    Builds and returns a FAISS-based retriever for policy documents.
+    Allows dynamic control of 'k' (number of retrieved chunks).
+    """
     # Load all policy PDFs from the folder
     docs_path = os.getenv("POLICY_DOCS_PATH", "./Policy-Documents")
 
@@ -27,7 +32,6 @@ def get_retriever():
     # Create FAISS vector database
     vectorstore = FAISS.from_documents(splits, embeddings)
 
-    # ✅ Return retriever for LangChain 0.2+ compatibility
-    retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
+    # ✅ Return retriever with dynamic k
+    retriever = vectorstore.as_retriever(search_kwargs={"k": k})
     return retriever
-
