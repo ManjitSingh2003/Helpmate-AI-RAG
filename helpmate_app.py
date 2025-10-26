@@ -41,10 +41,20 @@ def init_llm(model_name: str):
         return None
     return ChatGroq(model=model_name, groq_api_key=api_key)
 
-# --- Initialize retriever ---
+# --- Cached helper for document embeddings only ---
 @st.cache_resource
-def init_retriever(chunks: int):
-    return get_retriever(k=chunks)
+def load_vectorstore():
+    from src.utils.retrieval import get_vectorstore
+    return get_vectorstore()  # no args
+
+# --- Initialize retriever dynamically ---
+def init_retriever(k: int):
+    vectorstore = load_vectorstore()
+    retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": k})
+    return retriever
+
+# --- Usage ---
+retriever = init_retriever(k)
 
 # Initialize
 llm = init_llm(model_name)
@@ -86,3 +96,4 @@ if st.button("🔍 Get Answer") and query.strip():
 
             except Exception as e:
                 st.error(f"⚠️ An error occurred: {str(e)}")
+
