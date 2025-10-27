@@ -166,9 +166,4 @@ Then open your browser at `http://localhost:8501` or use the deployed app link a
 
 **Manjit Singh**
 PGP in Data Science & AI — *IIIT Bangalore*
-Passionate about building intelligent, accessible AI-driven systems that make complex information understandable.
 ---
-
-## 📄 License
-
-This project is licensed under the **MIT License** — see the LICENSE file for details.
