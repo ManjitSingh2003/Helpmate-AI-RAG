@@ -165,5 +165,7 @@ Then open your browser at `http://localhost:8501` or use the deployed app link a
 ## 👨‍💻 Author
 
 **Manjit Singh**
-PGP in Data Science & AI — *IIIT Bangalore*
+
+PGP in Data Science & AI - *IIIT Bangalore*
+
 ---
