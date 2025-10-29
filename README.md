@@ -1,6 +1,6 @@
 # HelpMate AI — Generative Search System for Insurance Policy Documents
 
-> **HelpMate AI** is an advanced Retrieval-Augmented Generation (RAG) system designed to revolutionize how insurance policy documents are searched and understood. The system allows users to ask natural language questions and receive precise, context-aware answers derived directly from **200+ real insurance policy PDFs**.
+> **HelpMate AI** is an advanced Retrieval-Augmented Generation (RAG) system designed to revolutionize how insurance policy documents are searched and understood. The system allows users to ask natural language questions and receive precise, context-aware answers derived directly from **200+ real insurance policy documents**.
 
 🔗 **Live App:** [Access the Streamlit App](https://manjitsingh2003-helpmate-ai-rag-helpmate-app-ec8big.streamlit.app/)
 
